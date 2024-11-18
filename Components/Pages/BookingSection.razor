@@ -31,6 +31,8 @@
     private bool accessibleRoom = false;
 
     private List<Room> bookedRooms = new();
+    
+    //Added room booker as part of singleton pattern exercise
     RoomBookerSingleton roomBooker = RoomBookerSingleton.Instance;      //Singleton - single point to control availability of rooms
 
     private void bookRoom()
@@ -62,7 +64,7 @@
         }
 
         //We only want to book this room if there's a suitable room available...
-        if (roomBooker.BookRoom(roomType, accessibleRoom))
+        if (roomBooker.BookRoom(roomType, accessibleRoom))      //Added this check to comply with singleton exercise
         {
             bookedRooms.Add(newRoomBooking);
         }
