@@ -1,0 +1,72 @@
+﻿<h3>Booking Section</h3>
+<select name="roomTypeDropdown" @bind="roomType">
+    @foreach (string room in Enum.GetNames(typeof(RoomType)))
+    {
+        <option value="@room">@room</option>
+    }
+</select>
+<br />
+<input type="checkbox" @bind="breakfastIncluded" name="breakfast" /> Include Breakfast
+<br />
+<input type="checkbox" @bind="champagneIncluded" name="champagne" /> Include Champagne
+<br />
+<input type="checkbox" @bind="accessibleRoom" name="accessible" /> Wheelchair accessible
+<br />
+<button @onclick="bookRoom">Book Room</button>
+<br/>
+<ul>
+    @foreach (var room in bookedRooms)
+    {
+        <li>
+            @room.Description @room.GetCost()
+        </li>
+    }
+</ul>
+
+
+@code {
+    private RoomType roomType = RoomType.Standard;
+    private bool breakfastIncluded = false;
+    private bool champagneIncluded = false;
+    private bool accessibleRoom = false;
+
+    private List<Room> bookedRooms = new();
+    RoomBookerSingleton roomBooker = RoomBookerSingleton.Instance;      //Singleton - single point to control availability of rooms
+
+    private void bookRoom()
+    {
+        Room newRoomBooking;
+
+        if (roomType == RoomType.SeaView)
+        {
+            newRoomBooking = new SeaViewRoom();
+        }
+        else
+        {
+            newRoomBooking = new StandardRoom();
+        }
+
+        if (breakfastIncluded == true)
+        {
+            newRoomBooking = new BreakfastDecorator(newRoomBooking);
+        }
+
+        if (champagneIncluded == true)
+        {
+            newRoomBooking = new ChampagneDecorator(newRoomBooking);
+        }
+
+        if (accessibleRoom == true)
+        {
+            newRoomBooking = new AccessibilityDecorator(newRoomBooking);
+        }
+
+        //We only want to book this room if there's a suitable room available...
+        if (roomBooker.BookRoom(roomType, accessibleRoom))
+        {
+            bookedRooms.Add(newRoomBooking);
+        }
+
+    }
+
+}
