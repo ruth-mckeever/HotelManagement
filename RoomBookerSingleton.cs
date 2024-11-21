@@ -1,11 +1,14 @@
 ﻿namespace HotelManagement
 {
-    public class RoomBookerSingleton
+    public class RoomBookerSingleton: IObservable
     {
         //Only one instance - we need a single point of control of the number of hotel rooms being booked
         public static readonly RoomBookerSingleton Instance = new RoomBookerSingleton();
 
+        private List<IObserver> observers = new List<IObserver>();
+
         //Fields to store number of available rooms
+        private static int totalAvailability;
         public static int accessibleRoomsSeaView = 3;
         public static int accessibleRoomsStandard = 5;
         public static int standardRoom = 10;
@@ -46,7 +49,73 @@
                         break;
                     }
             }
+            UpdateAvailability();
             return successfulBooking;
+        }
+
+        public void CancelBooking(Room roomToCancel){
+            RoomType type = RoomType.Standard;
+            bool isAccessible = false;
+
+            string roomDescription = roomToCancel.Description.ToLower();
+            if (roomDescription.Contains("accessible"))
+            {
+                isAccessible = true;
+            }
+
+            if (roomDescription.Contains("sea"))
+            {
+                type = RoomType.SeaView;
+            }
+
+            switch (type)
+            {
+                case RoomType.Standard:
+                    if (isAccessible)
+                    {
+                        accessibleRoomsStandard++;
+                    }
+                    else
+                    {
+                        standardRoom++;
+                    }
+                    break;
+                case RoomType.SeaView:
+                    if (isAccessible)
+                    {
+                        accessibleRoomsSeaView++;
+                    }
+                    else
+                    {
+                        seaViewRoom++;
+                    }
+                    break;
+            }
+            UpdateAvailability();
+        }
+
+        public void UpdateAvailability()
+        {
+            totalAvailability = accessibleRoomsSeaView + accessibleRoomsStandard + standardRoom + seaViewRoom;
+            NotifyObservers();
+        }
+
+        public void NotifyObservers()
+        {
+            foreach (var observer in observers)
+            {
+                observer.Update(totalAvailability);
+            }
+        }
+
+        public void RegisterObserver(IObserver o)
+        {
+            observers.Add(o);
+        }
+
+        public void RemoveObserver(IObserver o)
+        {
+            observers.Remove(o);
         }
     }
 }

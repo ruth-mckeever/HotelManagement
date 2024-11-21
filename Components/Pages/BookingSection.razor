@@ -1,4 +1,6 @@
-﻿<h3>Booking Section</h3>
+﻿@implements IObserver;
+
+<h3>Booking Section</h3>
 <select name="roomTypeDropdown" @bind="roomType">
     @foreach (string room in Enum.GetNames(typeof(RoomType)))
     {
@@ -12,26 +14,28 @@
 <br />
 <input type="checkbox" @bind="accessibleRoom" name="accessible" /> Wheelchair accessible
 <br />
-<button @onclick="bookRoom">Book Room</button>
+<button @onclick="bookRoom" disabled="@zeroRoomsAvailable">Book Room</button>
 <br/>
 <ul>
     @foreach (var room in bookedRooms)
     {
         <li>
             @room.Description @room.GetCost()
+            <button @onclick="e => DeleteRoomBooking(room)">Cancel Booking</button>
         </li>
     }
 </ul>
 
 
 @code {
+    private bool zeroRoomsAvailable = false;
     private RoomType roomType = RoomType.Standard;
     private bool breakfastIncluded = false;
     private bool champagneIncluded = false;
     private bool accessibleRoom = false;
 
     private List<Room> bookedRooms = new();
-    
+
     //Added room booker as part of singleton pattern exercise
     RoomBookerSingleton roomBooker = RoomBookerSingleton.Instance;      //Singleton - single point to control availability of rooms
 
@@ -69,6 +73,23 @@
             bookedRooms.Add(newRoomBooking);
         }
 
+    }
+
+    private void DeleteRoomBooking(Room roomToDelete)
+    {
+        this.bookedRooms.Remove(roomToDelete);
+        roomBooker.CancelBooking(roomToDelete);
+    }
+
+    public void Update(int availableRooms)
+    {
+        this.zeroRoomsAvailable = availableRooms == 0;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        roomBooker.RegisterObserver(this);
     }
 
 }
